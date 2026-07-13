@@ -2,7 +2,7 @@
 
 **Ask geographic questions in plain English and get interactive maps in seconds.**
 
-NLGeo is a geospatial analysis application that lets users explore OpenStreetMap data using natural language instead of GIS software or SQL. Enter a question such as **"Which Mumbai wards have the highest flood-exposed population?"** or **"How many pharmacies are there in each Berlin district?"**, and NLGeo retrieves the required data, performs the analysis, and generates an interactive choropleth map.
+NLGeo is a geospatial analysis application that lets users explore OpenStreetMap data using natural language instead of GIS software or SQL. Ask questions like **"Which Mumbai wards have the highest flood-exposed population?"** or **"How many pharmacies are there in each Berlin district?"**, and NLGeo retrieves the required data, performs the analysis, validates the results, and generates an interactive choropleth map.
 
 🎥 **[Demo Video](https://youtu.be/h7c9p2f2qqk)**
 
@@ -17,7 +17,7 @@ NLGeo is a geospatial analysis application that lets users explore OpenStreetMap
 - Automatic result validation
 - Multi-city support
 - Population-normalized analysis using WorldPop
-- Spatial joins using uploaded files
+- Spatial joins using uploaded datasets
 - CSV and GeoJSON export
 
 ---
@@ -28,8 +28,8 @@ NLGeo is a geospatial analysis application that lets users explore OpenStreetMap
 2. Convert the request into a structured analysis plan.
 3. Retrieve administrative boundaries and OpenStreetMap features.
 4. Run deterministic GIS analysis whenever possible.
-5. Use LLM-generated geospatial code for unsupported queries.
-6. Validate the results.
+5. Generate geospatial code with an LLM for unsupported queries.
+6. Validate the output.
 7. Return an interactive map together with the computed metrics.
 
 ---
@@ -38,21 +38,28 @@ NLGeo is a geospatial analysis application that lets users explore OpenStreetMap
 
 NLGeo has been tested across **20+ cities** covering flood analysis, healthcare accessibility, greenspace analysis, population-normalized metrics, and spatial joins.
 
-| City | Example Query | Validation | Time |
-|------|---------------|-----------:|------:|
-| Mumbai | Flood exposure by ward | Spearman = **1.00** | 6–10 s |
-| Berlin | Pharmacies by district | Spearman = **1.00** | 33–42 s |
-| London | Hospital density | Spearman = **1.00** | 42 s |
-| Paris | Restaurants by arrondissement | Spearman = **1.00** | 156 s |
-| Seoul | Cafes by ward | Spearman = **1.00** | ~90 s |
+| City | Example Query | Validation |
+|------|---------------|-----------:|
+| Mumbai | Flood exposure by ward | Spearman = **1.00** |
+| Berlin | Pharmacies by district | Spearman = **1.00** |
+| Greater London | Hospitals by ward | Spearman = **1.00** |
+| Paris | Restaurants by arrondissement | Spearman = **1.00** |
+| Seoul | Cafes by ward | Spearman = **1.00** |
+| New Delhi | Hospitals by area | Spearman = **1.00** |
+| Cairo | Schools by area | Spearman = **1.00** |
+| Lagos | Greenspace analysis | ✓ |
+| Bengaluru | Hospital coverage (file upload) | ✓ |
+| Kolkata | Hospital density (file upload) | ✓ |
 
 The Mumbai flood analysis reproduces a manually created QGIS benchmark with a Spearman correlation of **1.00**.
+
+Repeated queries are served from vector memory, avoiding unnecessary recomputation and improving response time.
 
 ---
 
 ## Architecture
 
-```
+```text
 User
  │
  ▼
@@ -77,6 +84,7 @@ Interactive Leaflet Map
 ## Tech Stack
 
 ### Backend
+
 - FastAPI
 - Celery
 - Redis
@@ -85,6 +93,7 @@ Interactive Leaflet Map
 - Qdrant
 
 ### Geospatial
+
 - GeoPandas
 - Shapely
 - OSMnx
@@ -93,14 +102,17 @@ Interactive Leaflet Map
 - WorldPop
 
 ### LLM
+
 - Groq (Llama 3.3 70B)
 - GPT-4o-mini
 - BM25 + Dense Retrieval
 
 ### Frontend
+
 - Leaflet.js
 
 ### Infrastructure
+
 - Docker
 - Azure
 - Prometheus
@@ -111,15 +123,24 @@ Interactive Leaflet Map
 
 ## Running Locally
 
+### Clone the repository
+
 ```bash
 git clone https://github.com/josaiahsyiem/nlgeo.git
-
 cd nlgeo
+```
 
+### Configure environment variables
+
+```bash
 cp .env.example .env
+```
 
-# Add your API keys
+Add your API keys to the `.env` file.
 
+### Start the application
+
+```bash
 docker compose up -d --build
 ```
 
@@ -139,7 +160,7 @@ Which Mumbai wards have the highest flood-exposed population?
 
 ## Deployment
 
-NLGeo runs as a containerized application on an Azure Virtual Machine using Docker Compose.
+NLGeo is deployed on an Azure Virtual Machine using Docker Compose.
 
 The deployment includes:
 
@@ -156,4 +177,10 @@ The same Docker Compose configuration is used for both local development and dep
 
 ## About
 
-NLGeo is a personal project built to make geospatial analysis more accessible through natural language. It combines traditional GIS techniques with modern language models to answer geographic questions and generate interactive maps without requiring GIS expertise.
+NLGeo is a personal project built to make geospatial analysis more accessible through natural language. It combines traditional GIS techniques with modern language models to answer geographic questions and generate interactive maps without requiring users to write GIS code or SQL.
+
+---
+
+## License
+
+This project is released under the MIT License.
