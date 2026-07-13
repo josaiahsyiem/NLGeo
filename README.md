@@ -181,6 +181,3 @@ NLGeo is a personal project built to make geospatial analysis more accessible th
 
 ---
 
-## License
-
-This project is released under the MIT License.
