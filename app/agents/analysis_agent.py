@@ -334,6 +334,15 @@ def _parse_domain_hint(domain_hint: str) -> dict:
     m = re.search(r'epsg[:\s]+(\d+)', hint)
     if m:
         config["epsg"] = m.group(1)
+    # radius hint for proximity queries: "2km radius", "use a 2km radius", "3 km radius"
+    if "radius" in hint:
+        rm = re.search(r'(\d+(?:\.\d+)?)\s*(km|m)\b', hint)
+        if rm:
+            config["radius_km"] = (float(rm.group(1)) / 1000.0
+                                   if rm.group(2) == 'm' else float(rm.group(1)))
+    for road in ["motorway", "trunk", "primary", "secondary", "tertiary"]:
+        if road in hint:
+            config.setdefault("road_types", []).append(road)
     for road in ["motorway", "trunk", "primary", "secondary", "tertiary"]:
         if road in hint:
             config.setdefault("road_types", []).append(road)
@@ -864,10 +873,12 @@ def run_hospital_density_analysis(task: str, plan: dict, retrieved_data: dict) -
                                   ).hexdigest()[:8], 16) % 1_000_000
                 _bp = "/data/processed/osm_boundaries_inline_%d.geojson" % _bh
                 # Check persistent cache first
-                _cache_path = "/data/cache/boundaries_%s.geojson" % re.sub(r'[^a-z0-9]', '_', _city.lower().strip())
+                _cache_path = "/data/cache/boundaries_%s.geojson" % re.sub(
+                    r'[^a-z0-9]', '_', _city.lower().strip())
                 if os.path.exists(_cache_path):
                     b_path = _cache_path
-                    print("[Analysis] inline boundary cache HIT: %s" % _cache_path)
+                    print("[Analysis] inline boundary cache HIT: %s" %
+                          _cache_path)
                 else:
                     _fp = _fetch_to_file(
                         BOUNDARY_FETCH.replace("__PLACE__", _place(_city)), _bp, 300)
@@ -877,7 +888,8 @@ def run_hospital_density_analysis(task: str, plan: dict, retrieved_data: dict) -
                         import shutil as _sh
                         os.makedirs("/data/cache", exist_ok=True)
                         _sh.copy2(_fp, _cache_path)
-                        print("[Analysis] inline boundary fetch succeeded + cached: %s" % _fp)
+                        print(
+                            "[Analysis] inline boundary fetch succeeded + cached: %s" % _fp)
             except Exception as _ie:
                 print("[Analysis] inline boundary fetch failed: %s" % _ie)
 
@@ -887,37 +899,48 @@ def run_hospital_density_analysis(task: str, plan: dict, retrieved_data: dict) -
             if not b_path or not os.path.exists(str(b_path)):
                 print("[Analysis] Attempting bbox-based boundary fallback...")
                 try:
-                    import requests as _req, geopandas as _gpd2
+                    import requests as _req
+                    import geopandas as _gpd2
                     from shapely.validation import make_valid as _mv
                     import osmnx as _ox2
                     _ox2.settings.overpass_url = 'http://overpass-api.de/api/interpreter'
                     _city2 = plan.get("city", "")
                     _nr = _req.get(
                         'https://nominatim.openstreetmap.org/search',
-                        params={'q': _city2, 'format': 'json', 'limit': 1, 'accept-language': 'en'},
+                        params={'q': _city2, 'format': 'json',
+                                'limit': 1, 'accept-language': 'en'},
                         headers={'User-Agent': 'GoAI/1.0'}, timeout=20).json()
                     if _nr:
                         _bb = _nr[0]['boundingbox']
-                        _s, _n, _w, _e = float(_bb[0]), float(_bb[1]), float(_bb[2]), float(_bb[3])
+                        _s, _n, _w, _e = float(_bb[0]), float(
+                            _bb[1]), float(_bb[2]), float(_bb[3])
                         # Cap span to 1.5 degrees to avoid Pacific islands etc
-                        _cx = (_w + _e) / 2; _cy = (_s + _n) / 2
-                        _w = max(_w, _cx - 0.75); _e = min(_e, _cx + 0.75)
-                        _s = max(_s, _cy - 0.75); _n = min(_n, _cy + 0.75)
-                        _best = None; _best_score = 0
+                        _cx = (_w + _e) / 2
+                        _cy = (_s + _n) / 2
+                        _w = max(_w, _cx - 0.75)
+                        _e = min(_e, _cx + 0.75)
+                        _s = max(_s, _cy - 0.75)
+                        _n = min(_n, _cy + 0.75)
+                        _best = None
+                        _best_score = 0
                         for _lvl in ['8', '9', '7', '10', '6']:
                             try:
-                                _tags = {'boundary': 'administrative', 'admin_level': _lvl}
+                                _tags = {'boundary': 'administrative',
+                                         'admin_level': _lvl}
                                 _cand = _ox2.features_from_bbox(
                                     bbox=(_n, _s, _e, _w), tags=_tags).reset_index(drop=True)
                                 if 'boundary' in _cand.columns:
-                                    _cand = _cand[_cand['boundary'] == 'administrative'].copy()
+                                    _cand = _cand[_cand['boundary']
+                                                  == 'administrative'].copy()
                                 _cand = _cand[_cand.geometry.geom_type.isin(
                                     ['Polygon', 'MultiPolygon'])].copy()
                                 if 'name' in _cand.columns:
                                     _cand = _cand[_cand['name'].notna()].copy()
-                                _cand['geometry'] = _cand['geometry'].apply(_mv)
+                                _cand['geometry'] = _cand['geometry'].apply(
+                                    _mv)
                                 _zone = int((_cx + 180) / 6) + 1
-                                _utm = 'EPSG:%d' % (32600 + _zone if _cy >= 0 else 32700 + _zone)
+                                _utm = 'EPSG:%d' % (
+                                    32600 + _zone if _cy >= 0 else 32700 + _zone)
                                 _cu = _cand.to_crs(_utm)
                                 _areas = _cu.geometry.area / 1e6
                                 _med = _areas.median()
@@ -927,22 +950,27 @@ def run_hospital_density_analysis(task: str, plan: dict, retrieved_data: dict) -
                                     continue
                                 _score = int(((_cand.to_crs(_utm).geometry.area / 1e6 >= 0.1) &
                                               (_cand.to_crs(_utm).geometry.area / 1e6 <= 500)).sum())
-                                print("[Analysis] bbox fallback lvl=%s n=%d score=%d" % (_lvl, len(_cand), _score))
+                                print("[Analysis] bbox fallback lvl=%s n=%d score=%d" % (
+                                    _lvl, len(_cand), _score))
                                 if _score > _best_score:
-                                    _best_score = _score; _best = _cand
+                                    _best_score = _score
+                                    _best = _cand
                             except Exception as _le:
-                                print("[Analysis] bbox fallback lvl=%s failed: %s" % (_lvl, _le))
+                                print(
+                                    "[Analysis] bbox fallback lvl=%s failed: %s" % (_lvl, _le))
                                 continue
                         if _best is not None and len(_best) >= 3:
                             _bbp = "/data/processed/osm_boundaries_bbox_%d.geojson" % _bh
                             _best.to_file(_bbp, driver='GeoJSON')
                             b_path = _bbp
                             # Cache it
-                            _cache_path2 = "/data/cache/boundaries_%s.geojson" % re.sub(r'[^a-z0-9]', '_', _city2.lower().strip())
+                            _cache_path2 = "/data/cache/boundaries_%s.geojson" % re.sub(
+                                r'[^a-z0-9]', '_', _city2.lower().strip())
                             import shutil as _sh2
                             os.makedirs("/data/cache", exist_ok=True)
                             _sh2.copy2(_bbp, _cache_path2)
-                            print("[Analysis] bbox boundary fallback succeeded: %d units, cached" % len(_best))
+                            print(
+                                "[Analysis] bbox boundary fallback succeeded: %d units, cached" % len(_best))
                 except Exception as _be:
                     print("[Analysis] bbox boundary fallback failed: %s" % _be)
     if not b_path or not os.path.exists(str(b_path)):
@@ -3242,6 +3270,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         if (not _generic_handles and not _is_satellite_q and similar and stored_code and
                 similar[0].get("similarity", 0) > 0.95 and
                 stored_city == current_city and current_city in stored_code.lower() and
+                not plan.get("_hint_config") and
                 _code_paths_valid(stored_code)):
             print(
                 f"[Analysis] Reusing code from memory (similarity: {similar[0]['similarity']})")
@@ -3782,9 +3811,30 @@ def generate_methodology_explanation(task: str, plan: dict, result: dict) -> str
         data_sources.append("OpenStreetMap")
     if "gpd.read_file" in code:
         data_sources.append("local boundary files")
+
+    hint_note = ""
+    hc = plan.get("_hint_config", {})
+    if hc:
+        parts = []
+        if hc.get("buffer_m"):
+            parts.append(
+                f"a {hc['buffer_m']}m buffer applied to rivers/waterways")
+        if hc.get("buffer_lake_m"):
+            parts.append(f"a {hc['buffer_lake_m']}m buffer applied to lakes")
+        if hc.get("buffer_water_m"):
+            parts.append(
+                f"a {hc['buffer_water_m']}m buffer applied to water features")
+        if hc.get("road_types"):
+            parts.append(
+                f"road types restricted to {', '.join(hc['road_types'])}")
+        if parts:
+            hint_note = " The user supplied an expert hint: " + \
+                "; ".join(
+                    parts) + ". You MUST mention these exact buffer/parameter values in the explanation."
+
     prompt = f"""In 2-3 sentences, explain how this GIS analysis was computed.
 Be specific: data sources, spatial operation, metric formula. Plain prose, no bullets.
-Task: "{task}", City: {city}, Sources: {data_sources}, Output: {output[:300]}
+Task: "{task}", City: {city}, Sources: {data_sources}, Output: {output[:300]}.{hint_note}
 Write only the explanation."""
     try:
         return smart_chat("You are a GIS expert. Explain analyses concisely.", prompt, use_groq=True)

@@ -199,8 +199,15 @@ COMBINED_KW = [
 ]
 
 PROXIMITY_KW = [
-    "nearest", "closest", "km of", "miles of", "radius", "distance from"
+    "nearest", "closest", "km of", "miles of", "radius", "distance from",
 ]
+# Regex: any proximity preposition followed (anywhere) by centre/downtown,
+# OR an explicit "within N km/m". Whitespace-tolerant, spelling-tolerant.
+PROXIMITY_RE = re.compile(
+    r'(near|around|close to|next to|by|surrounding|adjacent to|'
+    r'in the vicinity of|walking distance|from)\b.*\b(cent(?:re|er)|downtown|cbd|heart of)'
+    r'|within\s+\d+(?:\.\d+)?\s*(?:km|km|m|mi|miles?|kilomet)'
+)
 
 
 def _country_for(city):
@@ -219,7 +226,7 @@ def _clean(label):
 
 
 def parse_query(task):
-    t = task.lower()
+    t = re.sub(r'\s+', ' ', task.lower()).strip()
     ascending = any(k in t for k in ASC_KW)
 
     # Detect composite pattern FIRST before mode detection
@@ -235,7 +242,7 @@ def parse_query(task):
         composite_pattern = None
 
     if composite_pattern is None and (any(k in t for k in PROXIMITY_KW)
-                                      or re.search(r'within\s+\d', t)):
+                                      or PROXIMITY_RE.search(t)):
         mode = "proximity"
     elif any(k in t for k in PER_CAPITA_KW):
         mode = "percapita"
@@ -1293,12 +1300,17 @@ def run_generic_analysis(task, plan, retrieved_data):
     # 2b) proximity mode — different analysis path
     if mode == "proximity":
         import re as _re
-        _rm = _re.search(r'(\d+(?:\.\d+)?)\s*(km|m)\b', task.lower())
-        if _rm:
-            radius_km = float(_rm.group(1)) / \
-                (1000.0 if _rm.group(2) == 'm' else 1.0)
+        _hc = plan.get("_hint_config", {}) if isinstance(plan, dict) else {}
+        if _hc.get("radius_km"):
+            radius_km = float(_hc["radius_km"])
+            print("[Generic] radius=%skm (hint override)" % radius_km)
         else:
-            radius_km = 5
+            _rm = _re.search(r'(\d+(?:\.\d+)?)\s*(km|m)\b', task.lower())
+            if _rm:
+                radius_km = float(_rm.group(1)) / \
+                    (1000.0 if _rm.group(2) == 'm' else 1.0)
+            else:
+                radius_km = 5
         prox_code = (PROXIMITY_ANALYSIS_TEMPLATE
                      .replace("__F_PATH__", f_path)
                      .replace("__RADIUS_KM__", str(radius_km))
