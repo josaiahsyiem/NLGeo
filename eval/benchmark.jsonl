@@ -1,0 +1,25 @@
+{"id": "mumbai_flood_01", "query": "flood per ward", "city": "Mumbai", "type": "flood", "expected_top1": "Kurla", "expected_top3": ["Kurla", "Malad", "Andheri West"], "has_gt": true}
+{"id": "mumbai_flood_02", "query": "which wards have highest flood risk", "city": "Mumbai", "type": "flood", "expected_top1": "Kurla", "expected_top3": ["Kurla", "Malad", "Andheri West"], "has_gt": true}
+{"id": "mumbai_flood_03", "query": "flood exposed population per ward", "city": "Mumbai", "type": "flood", "expected_top1": "Kurla", "expected_top3": ["Kurla", "Malad", "Andheri West"], "has_gt": true}
+{"id": "berlin_pharm_01", "query": "pharmacies per ward", "city": "Berlin", "type": "point_count", "expected_top1": null, "expected_top3": ["Mitte", "Charlottenburg-Wilmersdorf", "Pankow"], "has_gt": false}
+{"id": "berlin_pharm_02", "query": "pharmacy density by district", "city": "Berlin", "type": "point_count", "expected_top1": "Mitte", "expected_top3": ["Mitte", "Charlottenburg-Wilmersdorf", "Pankow"], "has_gt": false}
+{"id": "berlin_clinic_01", "query": "clinics per ward", "city": "Berlin", "type": "point_count", "expected_top1": "Charlottenburg-Wilmersdorf", "expected_top3": null, "has_gt": false}
+{"id": "london_hosp_01", "query": "hospitals per ward", "city": "Greater London", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "london_flood_01", "query": "safest wards from flooding", "city": "London", "type": "flood_inversion", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "london_green_01", "query": "parks and greenspace", "city": "London", "type": "greenspace", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "paris_hosp_01", "query": "hospitals per arrondissement", "city": "Paris", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "paris_rest_01", "query": "restaurants per arrondissement", "city": "Paris", "type": "point_count", "expected_top1": "Paris 11e Arrondissement", "expected_top3": null, "has_gt": false}
+{"id": "paris_cafe_01", "query": "cafes near city centre", "city": "Paris", "type": "proximity", "expected_top1": "Aux Tours de Notre-Dame", "expected_top3": null, "has_gt": false}
+{"id": "paris_cafe_02", "query": "cafes within 2km of city centre", "city": "Paris", "type": "proximity", "expected_top1": "Aux Tours de Notre-Dame", "expected_top3": null, "has_gt": false}
+{"id": "cairo_school_01", "query": "schools per area", "city": "Cairo", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "seoul_cafe_01", "query": "cafes per ward", "city": "Seoul", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "delhi_hosp_01", "query": "hospitals per area", "city": "New Delhi", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "lagos_green_01", "query": "most green space", "city": "Lagos", "type": "greenspace", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "singapore_green_01", "query": "most green space", "city": "Singapore", "type": "greenspace", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "mumbai_pop_01", "query": "population density by ward", "city": "Mumbai", "type": "density", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "mumbai_composite_01", "query": "wards with high population and high flood risk", "city": "Mumbai", "type": "composite", "expected_top1": "Kurla", "expected_top3": null, "has_gt": false}
+{"id": "berlin_hosp_01", "query": "hospitals per ward", "city": "Berlin", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "berlin_school_01", "query": "schools per ward", "city": "Berlin", "type": "point_count", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "paris_prox_01", "query": "hospitals within 3km of city centre", "city": "Paris", "type": "proximity", "expected_top1": "Clinique Saint-Jean", "expected_top3": null, "has_gt": false}
+{"id": "berlin_prox_01", "query": "pharmacies within 2km of city centre", "city": "Berlin", "type": "proximity", "expected_top1": null, "expected_top3": null, "has_gt": false}
+{"id": "mumbai_flood_hint_01", "query": "flood per ward", "city": "Mumbai", "type": "flood_hint", "hint": "use 300m buffer for rivers and 200m for lakes", "expected_top1": null, "expected_top3": null, "has_gt": false}
