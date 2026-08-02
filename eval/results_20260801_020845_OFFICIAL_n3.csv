@@ -1,0 +1,76 @@
+id,rep,query,city,type,has_gt,status,eval_score,gt_correlation,top1_actual,top1_correct,top3_hit,latency_s
+mumbai_flood_01,1,flood per ward,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,27.28
+mumbai_flood_01,2,flood per ward,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,12.19
+mumbai_flood_01,3,flood per ward,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,9.06
+mumbai_flood_02,1,which wards have highest flood risk,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,12.08
+mumbai_flood_02,2,which wards have highest flood risk,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,12.07
+mumbai_flood_02,3,which wards have highest flood risk,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,15.11
+mumbai_flood_03,1,flood exposed population per ward,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,12.14
+mumbai_flood_03,2,flood exposed population per ward,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,12.1
+mumbai_flood_03,3,flood exposed population per ward,Mumbai,flood,True,complete,0.9,1.0,Kurla,True,1.0,9.05
+berlin_pharm_01,1,pharmacies per ward,Berlin,point_count,False,complete,0.9,1.0,Mitte,,0.6666666666666666,568.02
+berlin_pharm_01,2,pharmacies per ward,Berlin,point_count,False,complete,0.9,1.0,Mitte,,0.6666666666666666,36.27
+berlin_pharm_01,3,pharmacies per ward,Berlin,point_count,False,complete,0.9,1.0,Mitte,,0.6666666666666666,30.22
+berlin_pharm_02,1,pharmacy density by district,Berlin,point_count,False,complete,0.9,1.0,Friedenau,False,0.3333333333333333,39.25
+berlin_pharm_02,2,pharmacy density by district,Berlin,point_count,False,complete,0.9,1.0,Friedenau,False,0.3333333333333333,172.19
+berlin_pharm_02,3,pharmacy density by district,Berlin,point_count,False,complete,0.9,1.0,Friedenau,False,0.3333333333333333,45.26
+berlin_clinic_01,1,clinics per ward,Berlin,point_count,False,complete,0.9,,Charlottenburg-Wilmersdorf,True,,42.42
+berlin_clinic_01,2,clinics per ward,Berlin,point_count,False,complete,0.9,,Charlottenburg-Wilmersdorf,True,,36.26
+berlin_clinic_01,3,clinics per ward,Berlin,point_count,False,complete,0.9,,Charlottenburg-Wilmersdorf,True,,33.31
+london_hosp_01,1,hospitals per ward,Greater London,point_count,False,complete,0.9,,City of Westminster,,,54.32
+london_hosp_01,2,hospitals per ward,Greater London,point_count,False,complete,0.9,,City of Westminster,,,39.17
+london_hosp_01,3,hospitals per ward,Greater London,point_count,False,complete,0.9,,City of Westminster,,,39.22
+london_flood_01,1,safest wards from flooding,London,flood_inversion,False,complete,0.9,,London Borough of Croydon,,,21.14
+london_flood_01,2,safest wards from flooding,London,flood_inversion,False,complete,0.9,,London Borough of Croydon,,,21.13
+london_flood_01,3,safest wards from flooding,London,flood_inversion,False,complete,0.9,,London Borough of Croydon,,,21.12
+london_green_01,1,parks and greenspace,London,greenspace,False,complete,0.9,,London Borough of Barnet,,,159.95
+london_green_01,2,parks and greenspace,London,greenspace,False,complete,0.9,,London Borough of Barnet,,,153.75
+london_green_01,3,parks and greenspace,London,greenspace,False,complete,0.9,,London Borough of Barnet,,,84.49
+paris_hosp_01,1,hospitals per arrondissement,Paris,point_count,False,complete,0.9,,Paris 13e Arrondissement,,,30.19
+paris_hosp_01,2,hospitals per arrondissement,Paris,point_count,False,complete,0.9,,Paris 13e Arrondissement,,,247.34
+paris_hosp_01,3,hospitals per arrondissement,Paris,point_count,False,complete,0.9,,Paris 13e Arrondissement,,,33.17
+paris_rest_01,1,restaurants per arrondissement,Paris,point_count,False,complete,0.9,1.0,Paris 11e Arrondissement,True,,33.16
+paris_rest_01,2,restaurants per arrondissement,Paris,point_count,False,complete,0.9,1.0,Paris 11e Arrondissement,True,,36.19
+paris_rest_01,3,restaurants per arrondissement,Paris,point_count,False,complete,0.9,1.0,Paris 11e Arrondissement,True,,30.19
+paris_cafe_01,1,cafes near city centre,Paris,proximity,False,complete,0.9,,Le Café Suédois,False,,33.21
+paris_cafe_01,2,cafes near city centre,Paris,proximity,False,complete,0.9,,Le Café Suédois,False,,132.61
+paris_cafe_01,3,cafes near city centre,Paris,proximity,False,complete,0.9,,Le Café Suédois,False,,69.29
+paris_cafe_02,1,cafes within 2km of city centre,Paris,proximity,False,complete,0.9,,Le Café Suédois,False,,21.11
+paris_cafe_02,2,cafes within 2km of city centre,Paris,proximity,False,complete,0.9,,Le Café Suédois,False,,27.17
+paris_cafe_02,3,cafes within 2km of city centre,Paris,proximity,False,complete,0.9,,Le Café Suédois,False,,42.2
+cairo_school_01,1,schools per area,Cairo,point_count,False,complete,0.9,1.0,الزيتون القبليه,,,156.8
+cairo_school_01,2,schools per area,Cairo,point_count,False,complete,0.9,,السرايات الشرقيه,,,24.14
+cairo_school_01,3,schools per area,Cairo,point_count,False,complete,0.9,1.0,الزيتون القبليه,,,150.76
+seoul_cafe_01,1,cafes per ward,Seoul,point_count,False,complete,0.9,1.0,종로1·2·3·4가동,,,126.74
+seoul_cafe_01,2,cafes per ward,Seoul,point_count,False,complete,0.9,1.0,종로1·2·3·4가동,,,24.16
+seoul_cafe_01,3,cafes per ward,Seoul,point_count,False,complete,0.9,1.0,종로1·2·3·4가동,,,132.59
+delhi_hosp_01,1,hospitals per area,New Delhi,point_count,False,complete,0.9,,Ramakrishna Puram,,,105.56
+delhi_hosp_01,2,hospitals per area,New Delhi,point_count,False,complete,0.9,,Ramakrishna Puram,,,30.14
+delhi_hosp_01,3,hospitals per area,New Delhi,point_count,False,complete,0.9,,Ramakrishna Puram,,,36.21
+lagos_green_01,1,most green space,Lagos,greenspace,False,timeout,,,,,,901.44
+lagos_green_01,2,most green space,Lagos,greenspace,False,timeout,,,,,,901.52
+lagos_green_01,3,most green space,Lagos,greenspace,False,timeout,,,,,,901.52
+singapore_green_01,1,most green space,Singapore,greenspace,False,complete,0.9,,Unnamed,,,398.04
+singapore_green_01,2,most green space,Singapore,greenspace,False,failed,,,,,,325.71
+singapore_green_01,3,most green space,Singapore,greenspace,False,complete,0.9,,Unnamed,,,539.61
+mumbai_pop_01,1,population density by ward,Mumbai,density,False,complete,0.9,,Dongri,,,15.08
+mumbai_pop_01,2,population density by ward,Mumbai,density,False,complete,0.9,,Dongri,,,66.37
+mumbai_pop_01,3,population density by ward,Mumbai,density,False,complete,0.9,,Dongri,,,21.13
+mumbai_composite_01,1,wards with high population and high flood risk,Mumbai,composite,False,complete,0.9,1.0,Kurla,True,,15.07
+mumbai_composite_01,2,wards with high population and high flood risk,Mumbai,composite,False,complete,0.9,1.0,Kurla,True,,15.11
+mumbai_composite_01,3,wards with high population and high flood risk,Mumbai,composite,False,complete,0.9,1.0,Kurla,True,,36.21
+berlin_hosp_01,1,hospitals per ward,Berlin,point_count,False,complete,0.9,,Charlottenburg-Wilmersdorf,,,120.62
+berlin_hosp_01,2,hospitals per ward,Berlin,point_count,False,complete,0.9,,Charlottenburg-Wilmersdorf,,,120.67
+berlin_hosp_01,3,hospitals per ward,Berlin,point_count,False,complete,0.9,,Charlottenburg-Wilmersdorf,,,42.22
+berlin_school_01,1,schools per ward,Berlin,point_count,False,complete,0.9,,Mitte,,,39.16
+berlin_school_01,2,schools per ward,Berlin,point_count,False,complete,0.9,,Mitte,,,33.18
+berlin_school_01,3,schools per ward,Berlin,point_count,False,complete,0.9,,Mitte,,,39.24
+paris_prox_01,1,hospitals within 3km of city centre,Paris,proximity,False,complete,0.9,,Paris 13e Arrondissement,False,,39.25
+paris_prox_01,2,hospitals within 3km of city centre,Paris,proximity,False,complete,0.9,,Paris 13e Arrondissement,False,,27.16
+paris_prox_01,3,hospitals within 3km of city centre,Paris,proximity,False,complete,0.9,,Paris 13e Arrondissement,False,,81.35
+berlin_prox_01,1,pharmacies within 2km of city centre,Berlin,proximity,False,complete,0.9,,Dorotheenstadt Apotheke,,,36.15
+berlin_prox_01,2,pharmacies within 2km of city centre,Berlin,proximity,False,complete,0.9,,Dorotheenstadt Apotheke,,,27.1
+berlin_prox_01,3,pharmacies within 2km of city centre,Berlin,proximity,False,complete,0.9,,Dorotheenstadt Apotheke,,,165.96
+mumbai_flood_hint_01,1,flood per ward,Mumbai,flood_hint,False,complete,0.9,,T Ward,,,15.1
+mumbai_flood_hint_01,2,flood per ward,Mumbai,flood_hint,False,complete,0.9,,T Ward,,,15.08
+mumbai_flood_hint_01,3,flood per ward,Mumbai,flood_hint,False,complete,0.9,,T Ward,,,63.37
