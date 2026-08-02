@@ -65,6 +65,30 @@ Repeated queries are served from vector memory, avoiding unnecessary recomputati
 
 ---
 
+## Evaluation
+
+NLGeo ships with a reproducible evaluation harness ([`eval/`](eval/)): a 25-query benchmark spanning 9 cities and 8 query types, run at N=3 repetitions (75 executions).
+
+| Metric | Value |
+|------|------:|
+| Task success rate | **95%** (71/75) |
+| Top-1 ranking accuracy | **87.5%** (21/24 checkable) |
+| Latency (steady-state) | p50 **36 s** · p95 247 s |
+| Deterministic-path stability | 12/12 identical answers across repetitions |
+
+Full results and findings — including LLM-judge score saturation and an 18× cache-warming speedup — are in [`eval/RESULTS.md`](eval/RESULTS.md).
+
+**Ablation — does deterministic-first actually matter?** Disabling all 22 deterministic analysis paths and forcing every query through LLM code generation collapses task success from **100% to 21%** and ground-truth correctness from **100% to 4%**, and introduces run-to-run nondeterminism plus confidently-wrong answers that the LLM judge scores identically to correct ones. Method, per-query outcomes, and caveats: [`eval/ABLATION.md`](eval/ABLATION.md).
+
+Reproduce it:
+
+```bash
+python eval/run_benchmark.py            # full 25-query suite
+python eval/run_benchmark.py --repeat 3 # variance run
+```
+
+---
+
 ## Architecture
 
 ```text
@@ -153,7 +177,7 @@ Repeated queries are served from vector memory, avoiding unnecessary recomputati
 Clone the repository.
 
 ```bash
-git clone https://github.com/josaiahsyiem/nlgeo.git
+git clone https://github.com/josaiahsyiem/NLGeo.git
 cd nlgeo
 ```
 
