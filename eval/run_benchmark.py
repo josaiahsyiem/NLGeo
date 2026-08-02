@@ -142,7 +142,8 @@ def main():
 
     items = load_benchmark()
     if args.only:
-        items = [i for i in items if args.only.lower() in i["id"].lower()]
+        only_list = [s.strip().lower() for s in args.only.split(",")]
+        items = [i for i in items if any(s in i["id"].lower() for s in only_list)]
     if not items:
         print("No benchmark items matched.")
         sys.exit(1)

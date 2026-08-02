@@ -1,0 +1,13 @@
+id,rep,query,city,type,has_gt,status,eval_score,gt_correlation,top1_actual,top1_correct,top3_hit,latency_s
+mumbai_flood_02,1,which wards have highest flood risk,Mumbai,flood,True,complete,0.9,,R/S Ward,False,0.0,15.13
+berlin_pharm_01,1,pharmacies per ward,Berlin,point_count,False,failed,,,,,,21.21
+berlin_clinic_01,1,clinics per ward,Berlin,point_count,False,failed,,,,,,33.21
+london_hosp_01,1,hospitals per ward,Greater London,point_count,False,complete,0.1,,London Borough of Sutton,,,36.29
+paris_rest_01,1,restaurants per arrondissement,Paris,point_count,False,failed,,,,,,21.17
+paris_cafe_02,1,cafes within 2km of city centre,Paris,proximity,False,failed,,,,,,21.19
+cairo_school_01,1,schools per area,Cairo,point_count,False,failed,,,,,,90.59
+seoul_cafe_01,1,cafes per ward,Seoul,point_count,False,failed,,,,,,21.15
+delhi_hosp_01,1,hospitals per area,New Delhi,point_count,False,failed,,,,,,33.18
+mumbai_pop_01,1,population density by ward,Mumbai,density,False,failed,,,,,,24.11
+mumbai_composite_01,1,wards with high population and high flood risk,Mumbai,composite,False,complete,0.9,,Kurla,True,,12.06
+berlin_prox_01,1,pharmacies within 2km of city centre,Berlin,proximity,False,failed,,,,,,18.07

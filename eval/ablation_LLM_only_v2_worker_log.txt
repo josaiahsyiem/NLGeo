@@ -1,0 +1,42 @@
+[RAG] Handbooks already indexed: 10 chunks
+[RAG] BM25 index built: 8 chunks
+[Startup] WorldPop pre-download started for: ['IND', 'GBR', 'DEU', 'FRA', 'NLD', 'USA', 'BRA', 'NGA', 'KEN', 'AUS', 'KOR', 'JPN', 'EGY', 'ESP', 'ITA', 'SGP', 'ARE', 'TUR', 'ZAF', 'CAN']
+[Startup] WorldPop IND: already cached (/data/processed/worldpop_IND_2020.tif)
+[Startup] WorldPop GBR: already cached (/data/processed/worldpop_GBR_2020.tif)
+[Startup] WorldPop DEU: already cached (/data/processed/worldpop_DEU_2020.tif)
+[Startup] WorldPop FRA: already cached (/data/processed/worldpop_FRA_2020.tif)
+[Startup] WorldPop NLD: already cached (/data/processed/worldpop_NLD_2020.tif)
+[Startup] WorldPop USA: already cached (/data/processed/worldpop_USA_2020.tif)
+[Startup] WorldPop BRA: already cached (/data/processed/worldpop_BRA_2020.tif)
+[Startup] WorldPop NGA: already cached (/data/processed/worldpop_NGA_2020.tif)
+[Startup] WorldPop KEN: already cached (/data/processed/worldpop_KEN_2020.tif)
+[Startup] WorldPop AUS: already cached (/data/processed/worldpop_AUS_2020.tif)
+[Startup] WorldPop KOR: already cached (/data/processed/worldpop_KOR_2020.tif)
+[Startup] WorldPop JPN: already cached (/data/processed/worldpop_JPN_2020.tif)
+[Startup] WorldPop EGY: already cached (/data/processed/worldpop_EGY_2020.tif)
+[Startup] WorldPop ESP: already cached (/data/processed/worldpop_ESP_2020.tif)
+[Startup] WorldPop ITA: already cached (/data/processed/worldpop_ITA_2020.tif)
+[Startup] WorldPop SGP: already cached (/data/processed/worldpop_SGP_2020.tif)
+[Startup] WorldPop ARE: already cached (/data/processed/worldpop_ARE_2020.tif)
+[Startup] WorldPop TUR: already cached (/data/processed/worldpop_TUR_2020.tif)
+[Startup] WorldPop ZAF: already cached (/data/processed/worldpop_ZAF_2020.tif)
+[Startup] WorldPop CAN: already cached (/data/processed/worldpop_CAN_2020.tif)
+ 
+ -------------- celery@2689d346eb69 v5.3.6 (emerald-rush)
+--- ***** ----- 
+-- ******* ---- Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.41 2026-08-02 06:00:56
+- *** --- * --- 
+- ** ---------- [config]
+- ** ---------- .> app:         goai:0x71ada2423d90
+- ** ---------- .> transport:   redis://goai_redis:6379/0
+- ** ---------- .> results:     disabled://
+- *** --- * --- .> concurrency: 32 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** ----- 
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+                
+
+[tasks]
+  . worker.process_task
+

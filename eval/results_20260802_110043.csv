@@ -1,0 +1,2 @@
+id,rep,query,city,type,has_gt,status,eval_score,gt_correlation,top1_actual,top1_correct,top3_hit,latency_s
+mumbai_flood_02,1,which wards have highest flood risk,Mumbai,flood,True,failed,,,,,,9.12
