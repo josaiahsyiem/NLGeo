@@ -1274,6 +1274,69 @@ def run_flood_extent_analysis(task: str, plan: dict, retrieved_data: dict) -> di
     _lf_analysis_event("flood_extent_done", output=result)
     return result
 
+
+def compute_flood_exposure(mask_path: str, boundaries_path: str,
+                           pop_path: str = None, name_col: str = None) -> dict:
+    """Rank polygons (wards/districts) by flooding from a flood-extent mask.
+
+    Always computes flooded pixels + fraction per polygon; if a WorldPop
+    raster is given, also sums population living inside flooded pixels.
+    """
+    import numpy as np
+    import geopandas as gpd
+    import rasterio
+    from rasterio.mask import mask as rio_mask
+    from rasterio.warp import reproject, Resampling
+    from contextlib import nullcontext
+
+    gdf = gpd.read_file(boundaries_path)
+    if gdf.crs is None:
+        gdf = gdf.set_crs("EPSG:4326")
+    with rasterio.open(mask_path) as msrc:
+        gdf = gdf.to_crs(msrc.crs)
+
+    if name_col is None:
+        name_col = next((c for c in gdf.columns if c.lower() in
+                         ("name", "ward", "ward_name", "district", "dist_name")), None)
+
+    rows = []
+    with rasterio.open(mask_path) as msrc, \
+            (rasterio.open(pop_path) if pop_path else nullcontext()) as psrc:
+        for i, row in gdf.iterrows():
+            geom = [row.geometry.__geo_interface__]
+            try:
+                fl, fl_tr = rio_mask(msrc, geom, crop=True, nodata=255)
+            except Exception:
+                continue  # polygon outside the mask
+            fl = fl[0]
+            valid = fl != 255
+            flooded = int(((fl == 1) & valid).sum())
+            total = int(valid.sum())
+            rec = {
+                "name": str(row[name_col]) if name_col else f"zone_{i}",
+                "flooded_pixels": flooded,
+                "flooded_fraction": round(flooded / total, 4) if total else 0.0,
+            }
+            if pop_path:
+                try:
+                    pp, pp_tr = rio_mask(psrc, geom, crop=True, nodata=0)
+                    pp = pp[0].astype("float64")
+                    fl_on_pop = np.full(pp.shape, 255, dtype="uint8")
+                    reproject(source=fl, destination=fl_on_pop,
+                              src_transform=fl_tr, src_crs=msrc.crs,
+                              dst_transform=pp_tr, dst_crs=psrc.crs,
+                              src_nodata=255, dst_nodata=255,
+                              resampling=Resampling.nearest)
+                    rec["flooded_population"] = int(
+                        pp[(fl_on_pop == 1) & (pp > 0)].sum())
+                except Exception:
+                    rec["flooded_population"] = None
+            rows.append(rec)
+
+    key = "flooded_population" if pop_path else "flooded_pixels"
+    rows.sort(key=lambda r: (r.get(key) or 0), reverse=True)
+    return {"success": True, "ranking": rows[:20], "ranked_by": key}
+
 # ── Deterministic greenspace ──────────────────────────────────────────────────
 
 
