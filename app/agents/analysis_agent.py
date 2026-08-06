@@ -1253,7 +1253,7 @@ def run_flood_extent_analysis(task: str, plan: dict, retrieved_data: dict) -> di
     try:
         with open(img_path, "rb") as f:
             r = _rq.post(
-                "http://host.docker.internal:8000/flood_mask",
+                "http://host.docker.internal:8001/flood_mask",
                 files={"file": f},
                 timeout=300,
             )
@@ -3600,6 +3600,27 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         result = run_flood_extent_analysis(task, plan, retrieved_data)
         if result["success"]:
             plan["_analysis_path"] = "flood_extent_unet"
+
+            # chain exposure if the user also gave boundaries
+            _bnd = next((str(f) for f in (plan.get("uploaded_files") or [])
+                         if str(f).lower().endswith((".geojson", ".json", ".gpkg", ".shp"))),
+                        None) or plan.get("boundaries_path")
+            if _bnd:
+                try:
+                    exp = compute_flood_exposure(
+                        result["output_raster"], _bnd,
+                        pop_path=plan.get("population_raster"))
+                    if exp.get("success"):
+                        result["exposure_ranking"] = exp["ranking"]
+                        top = exp["ranking"][0] if exp["ranking"] else None
+                        if top:
+                            result["summary"] += (
+                                f" Exposure ranked by {exp['ranked_by']}: "
+                                f"worst-hit zone is {top['name']} "
+                                f"({top['flooded_fraction']*100:.1f}% flooded).")
+                except Exception as _e:
+                    print(f"[Analysis] Exposure chaining failed: {_e}")
+
             return result
         print(
             f"[Analysis] Flood extent failed: {result.get('error', '')[:100]}")
