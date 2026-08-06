@@ -3621,6 +3621,33 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
                 except Exception as _e:
                     print(f"[Analysis] Exposure chaining failed: {_e}")
 
+            # ── ground response recommendations in NDMA guidance ─────────
+            try:
+                import json as _json
+                from tools.ndma_rag import retrieve_ndma
+                from tools.llm_client import smart_chat
+
+                _docs = retrieve_ndma(
+                    "immediate flood response priorities evacuation relief water supply", k=3)
+                _ctx = "\n\n".join(
+                    f"[{d['source']}] {d['text'][:600]}" for d in _docs)
+                _rank = _json.dumps(result.get("exposure_ranking", [])[:5])
+
+                _sys = ("You are a disaster-response assistant. Base every "
+                        "recommendation ONLY on the NDMA guideline excerpts "
+                        "provided. Cite the source document name for each "
+                        "recommendation. Be concrete and brief.")
+                _usr = (f"Flood situation: {result['summary']}\n"
+                        f"Zone exposure ranking: {_rank}\n\n"
+                        f"NDMA guideline excerpts:\n{_ctx}\n\n"
+                        "Give 3-4 prioritized response recommendations for "
+                        "the worst-hit zones, each citing its source.")
+
+                result["recommendations"] = smart_chat(
+                    _sys, _usr, call_name="ndma_recommendations")
+            except Exception as _e:
+                print(f"[Analysis] NDMA grounding failed: {_e}")
+
             return result
         print(
             f"[Analysis] Flood extent failed: {result.get('error', '')[:100]}")
