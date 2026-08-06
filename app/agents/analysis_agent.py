@@ -1221,7 +1221,61 @@ run_analysis()
     return {"success": False, "error": error}
 
 
+def run_flood_extent_analysis(task: str, plan: dict, retrieved_data: dict) -> dict:
+    """Observed flood extent from satellite imagery via the FloodAgent U-Net service.
+
+    Unlike run_flood_risk_analysis (proximity-based risk), this maps actual
+    water pixels in a Sentinel-2 GeoTIFF using a trained segmentation model.
+    """
+    import requests as _rq
+    import os
+    import time
+
+    _lf_analysis_event("flood_extent_start", input={"task": task})
+
+    # imagery source: uploaded GeoTIFF takes priority, else path in plan
+    img_path = None
+    uploads = plan.get("uploaded_files") or []
+    for f in uploads:
+        if str(f).lower().endswith((".tif", ".tiff")):
+            img_path = f
+            break
+    img_path = img_path or plan.get("imagery_path")
+
+    if not img_path or not os.path.exists(img_path):
+        return {
+            "success": False,
+            "error": "flood_extent needs a Sentinel-2 GeoTIFF (13-band). "
+                     "Upload one or set plan['imagery_path'].",
+        }
+
+    out_path = f"/data/processed/flood_extent_{int(time.time())}.tif"
+    try:
+        with open(img_path, "rb") as f:
+            r = _rq.post(
+                "http://host.docker.internal:8000/flood_mask",
+                files={"file": f},
+                timeout=300,
+            )
+        r.raise_for_status()
+        with open(out_path, "wb") as f:
+            f.write(r.content)
+        model_note = r.headers.get("X-Model-Output", "")
+    except Exception as e:
+        return {"success": False, "error": f"FloodAgent service call failed: {e}"}
+
+    result = {
+        "success": True,
+        "analysis_type": "flood_extent",
+        "output_raster": out_path,
+        "summary": f"Flood extent mapped from imagery using U-Net segmentation "
+        f"(val mIoU 0.90 on Sen1Floods11). {model_note}",
+    }
+    _lf_analysis_event("flood_extent_done", output=result)
+    return result
+
 # ── Deterministic greenspace ──────────────────────────────────────────────────
+
 
 def run_greenspace_analysis(task: str, plan: dict, retrieved_data: dict) -> dict:
     g_path = retrieved_data.get("osm_greenspace", {}).get("file_path")
@@ -2697,7 +2751,7 @@ def run_per_capita_analysis(task: str, plan: dict, retrieved_data: dict) -> dict
             tif_url = latest['files'][0]
             tif_year = latest['popyear']
             tif_path = f'/data/processed/worldpop_{iso3}_{tif_year}.tif'
-            if not os.path.exists(tif_path):
+            if not SKIP_DETERMINISTIC and (not os.path.exists(tif_path)):
                 print(f"[Analysis] Downloading WorldPop for {iso3}...")
                 resp = _req.get(tif_url, timeout=300, stream=True)
                 with open(tif_path, 'wb') as f:
@@ -2937,7 +2991,7 @@ run_analysis()
     sandbox_result = run_code_in_sandbox(code, timeout=600)
     if sandbox_result["success"]:
         validation = validate_analysis_output(sandbox_result["output"], task)
-        if validation["valid"]:
+        if not SKIP_DETERMINISTIC and (validation["valid"]):
             print("[Analysis] Per-capita analysis succeeded")
             return {"success": True, "code": code, "output": sandbox_result["output"], "attempts": 1}
         error = validation["error"]
@@ -3243,7 +3297,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
 
     for source, data in list(retrieved_data.items()):
         fpath = data.get('file_path', '')
-        if fpath and not os.path.exists(fpath):
+        if not SKIP_DETERMINISTIC and (fpath and not os.path.exists(fpath)):
             print(f"[Analysis] Early flag: {source} file missing: {fpath}")
             retrieved_data[source] = {"error": f"File not found: {fpath}"}
 
@@ -3267,7 +3321,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
             "heat island", "urban heat", "uhi", "thermal", "surface temperature",
             "lst", "ndvi", "vegetation index", "vegetation health", "greenness",
             "heat map", "heat stress", "vegetation cover", "leaf area"])
-        if (not _generic_handles and not _is_satellite_q and similar and stored_code and
+        if (not SKIP_DETERMINISTIC and not _generic_handles and not _is_satellite_q and similar and stored_code and
                 similar[0].get("similarity", 0) > 0.95 and
                 stored_city == current_city and current_city in stored_code.lower() and
                 not plan.get("_hint_config") and
@@ -3318,7 +3372,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
 
     _hint_has_buffer = any(k.startswith("buffer")
                            for k in plan.get("_hint_config", {}))
-    if is_mumbai_flood_query(task, plan) and not is_per_capita and not is_vulnerability and not _hint_has_buffer:
+    if is_mumbai_flood_query(task, plan) and not is_per_capita and not is_vulnerability and not _hint_has_buffer and not SKIP_DETERMINISTIC:
         print("[Analysis] Mumbai flood benchmark path")
         sandbox_result = run_code_in_sandbox(MUMBAI_FLOOD_CODE)
         if sandbox_result["success"]:
@@ -3333,7 +3387,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
     has_csv = any(f["type"] == "csv" for f in upload_files)
 
     geojson_count = sum(1 for f in upload_files if f["type"] == "geojson")
-    if geojson_count >= 2 and not (is_uhi or is_ndvi):
+    if not SKIP_DETERMINISTIC and (geojson_count >= 2 and not (is_uhi or is_ndvi)):
         print(f"[Analysis] Multi-GeoJSON path ({geojson_count} files)")
         result = run_multi_geojson_analysis(task, plan)
         if result["success"]:
@@ -3341,7 +3395,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         print(
             f"[Analysis] Multi-GeoJSON path failed: {result.get('error', '')[:100]}")
 
-    if has_geojson and has_csv:
+    if not SKIP_DETERMINISTIC and (has_geojson and has_csv):
         print("[Analysis] Multi-file path (GeoJSON + CSV)")
         result = run_multi_file_analysis(task, plan)
         if result["success"]:
@@ -3358,10 +3412,10 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         task_lower = task.lower()
         needs_osm_points = any(x in task_lower for x in [
             "hospital", "clinic", "medical", "school", "education"])
-        if needs_osm_points:
+        if not SKIP_DETERMINISTIC and (needs_osm_points):
             print("[Analysis] Hybrid Upload+OSM path")
             result = run_hybrid_upload_osm_analysis(task, plan)
-            if result["success"]:
+            if not SKIP_DETERMINISTIC and (result["success"]):
                 return result
             print("[Analysis] Hybrid path failed — falling back to single file")
         print("[Analysis] Single file path")
@@ -3374,7 +3428,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
     has_boundaries = ("osm_boundaries" in retrieved_data and retrieved_data["osm_boundaries"].get("file_path") and os.path.exists(
         str(retrieved_data["osm_boundaries"].get("file_path", "")))) or "mumbai" in plan.get("city", "").lower() \
         or bool(_uploaded_boundary(plan))
-    if is_per_capita and has_boundaries:
+    if not SKIP_DETERMINISTIC and (is_per_capita and has_boundaries):
         print("[Analysis] Per-capita analysis path")
         result = run_per_capita_analysis(task, plan, retrieved_data)
         if result["success"]:
@@ -3403,7 +3457,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
                 tif_path = None
         else:
             tif_path = tif_match.group(1)
-        if tif_path and os.path.exists(tif_path):
+        if not SKIP_DETERMINISTIC and (tif_path and os.path.exists(tif_path)):
             print(f"[Analysis] Satellite {'UHI' if is_uhi else 'NDVI'} path")
             if not retrieved_data.get("osm_boundaries", {}).get("file_path"):
                 print("[Analysis] Satellite: boundaries missing — fetching inline")
@@ -3452,7 +3506,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
             tif_path_wc = fallback_wc if os.path.exists(fallback_wc) else None
         else:
             tif_path_wc = tif_match_wc.group(1)
-        if tif_path_wc and os.path.exists(tif_path_wc):
+        if not SKIP_DETERMINISTIC and (tif_path_wc and os.path.exists(tif_path_wc)):
             print(f"[Analysis] ESA WorldCover land cover path")
             result = run_worldcover_analysis(
                 task, plan, retrieved_data, tif_path_wc)
@@ -3464,6 +3518,29 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         else:
             print(
                 f"[Analysis] WorldCover tif not found for {plan.get('city', '')}")
+
+    # ── Flood extent from imagery (FloodAgent U-Net service) ─────────────
+    # Fires when the user wants observed flooding mapped from a satellite
+    # image — distinct from proximity-based flood *risk*.
+    _wants_flood_extent = (
+        any(x in task_lower_q for x in [
+            "flood extent", "map the flood", "flooded area",
+            "flooding in this image", "flood from imagery",
+            "flood from satellite", "segment flood", "detect flood"
+        ])
+        or ("flood" in task_lower_q and any(
+            str(f).lower().endswith((".tif", ".tiff"))
+            for f in (plan.get("uploaded_files") or [])))
+    )
+    if _wants_flood_extent and not SKIP_DETERMINISTIC:
+        print("[Analysis] Flood extent path (FloodAgent U-Net service)")
+        result = run_flood_extent_analysis(task, plan, retrieved_data)
+        if result["success"]:
+            plan["_analysis_path"] = "flood_extent_unet"
+            return result
+        print(
+            f"[Analysis] Flood extent failed: {result.get('error', '')[:100]}")
+
     # Block it for any query that involves specific OSM features
     _OSM_FEATURE_KEYWORDS = [
         'hospital', 'clinic', 'school', 'university', 'college',
@@ -3477,7 +3554,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         'osm_hospitals', 'osm_roads', 'osm_water', 'osm_schools',
         'osm_greenspace', 'osm_transit', 'osm_commercial', 'osm_cycling', 'osm_parking'])
     if "mumbai" in plan.get("city", "").lower() and not upload_files and not is_per_capita and not has_deterministic and not _is_osm_feature_query and not _is_generic_feature and not SKIP_DETERMINISTIC:
-        if _is_composite:
+        if not SKIP_DETERMINISTIC and (_is_composite):
             print(
                 "[Analysis] Composite pattern detected — skipping Mumbai general engine")
         else:
@@ -3493,7 +3570,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
     _wants_hospital = any(x in task_lower_q for x in [
                           "hospital", "clinic", "doctor", "medical", "healthcare"])
     if ("osm_hospitals" in retrieved_data or _wants_hospital) and not is_per_capita and not SKIP_DETERMINISTIC:
-        if _is_composite:
+        if not SKIP_DETERMINISTIC and (_is_composite):
             print(
                 "[Analysis] Composite pattern detected — skipping deterministic hospital")
         else:
@@ -3505,7 +3582,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
                 f"[Analysis] Hospital density failed: {result.get('error', '')[:100]}")
 
     if "osm_boundaries" in retrieved_data and "osm_roads" in retrieved_data and not is_per_capita and not SKIP_DETERMINISTIC:
-        if _is_composite:
+        if not SKIP_DETERMINISTIC and (_is_composite):
             print("[Analysis] Composite pattern detected — skipping deterministic road")
         else:
             print("[Analysis] Deterministic road density path")
@@ -3516,7 +3593,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
                 f"[Analysis] Road density failed: {result.get('error', '')[:100]}")
 
     if "osm_boundaries" in retrieved_data and "osm_water" in retrieved_data and not is_per_capita and not SKIP_DETERMINISTIC:
-        if _is_composite:
+        if not SKIP_DETERMINISTIC and (_is_composite):
             print(
                 "[Analysis] Composite pattern detected — skipping deterministic flood")
         else:
@@ -3529,7 +3606,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
                 f"[Analysis] Flood risk failed: {result.get('error', '')[:100]}")
 
     if "osm_boundaries" in retrieved_data and "osm_schools" in retrieved_data and not is_per_capita and not SKIP_DETERMINISTIC:
-        if _is_composite:
+        if not SKIP_DETERMINISTIC and (_is_composite):
             print(
                 "[Analysis] Composite pattern detected — skipping deterministic schools")
         else:
@@ -3545,7 +3622,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
         print("[Analysis] osm_parks aliased to greenspace deterministic path")
 
     if "osm_greenspace" in retrieved_data and not is_per_capita and not SKIP_DETERMINISTIC:
-        if _is_composite:
+        if not SKIP_DETERMINISTIC and (_is_composite):
             print(
                 "[Analysis] Composite pattern detected — skipping deterministic greenspace")
         else:
@@ -3571,7 +3648,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
                 from generic_engine import run_generic_analysis as _run_generic_early
             except ImportError:
                 _run_generic_early = None
-        if _run_generic_early is not None:
+        if not SKIP_DETERMINISTIC and (_run_generic_early is not None):
             print("[Analysis] Generic engine early path")
             _gr_early = _run_generic_early(task, plan, retrieved_data)
             if _gr_early.get("success"):
@@ -3603,7 +3680,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
     has_multi_source = any(k in retrieved_data for k in
                            ['osm_boundaries', 'osm_roads', 'osm_hospitals', 'osm_parks', 'osm_water', 'osm_schools',
                             'osm_transit', 'osm_commercial', 'osm_cycling', 'osm_parking'])
-    if is_osmnx_query(plan) and not has_multi_source:
+    if not SKIP_DETERMINISTIC and (is_osmnx_query(plan) and not has_multi_source):
         print("[Analysis] OSMnx template path")
         code = generate_osmnx_analysis_code(task, plan)
         sandbox_result = run_code_in_sandbox(code)
@@ -3632,7 +3709,7 @@ def run_analysis_for_task(task: str, retrieved_data: dict, plan: dict) -> dict:
             from generic_engine import run_generic_analysis as _run_generic
         except ImportError:
             _run_generic = None
-    if _run_generic is not None:
+    if not SKIP_DETERMINISTIC and (_run_generic is not None):
         print("[Analysis] Generic engine path")
         _gr = _run_generic(task, plan, retrieved_data)
         if _gr.get("success"):
