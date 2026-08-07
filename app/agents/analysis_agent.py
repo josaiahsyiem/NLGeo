@@ -1296,8 +1296,12 @@ def compute_flood_exposure(mask_path: str, boundaries_path: str,
         gdf = gdf.to_crs(msrc.crs)
 
     if name_col is None:
-        name_col = next((c for c in gdf.columns if c.lower() in
-                         ("name", "ward", "ward_name", "district", "dist_name")), None)
+        for cand in ("name_2", "adm2_en", "district", "dist_name",
+                     "ward", "ward_name", "name"):
+            name_col = next(
+                (c for c in gdf.columns if c.lower() == cand), None)
+            if name_col:
+                break
 
     rows = []
     with rasterio.open(mask_path) as msrc, \
