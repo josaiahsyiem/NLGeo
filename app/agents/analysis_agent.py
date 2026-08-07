@@ -1295,6 +1295,12 @@ def compute_flood_exposure(mask_path: str, boundaries_path: str,
     with rasterio.open(mask_path) as msrc:
         gdf = gdf.to_crs(msrc.crs)
 
+    # districts in the population raster's own CRS (it differs from the mask's)
+    gdf_pop = None
+    if pop_path:
+        with rasterio.open(pop_path) as _p:
+            gdf_pop = gdf.to_crs(_p.crs)
+
     if name_col is None:
         for cand in ("name_2", "adm2_en", "district", "dist_name",
                      "ward", "ward_name", "name"):
@@ -1323,7 +1329,8 @@ def compute_flood_exposure(mask_path: str, boundaries_path: str,
             }
             if pop_path:
                 try:
-                    pp, pp_tr = rio_mask(psrc, geom, crop=True, nodata=0)
+                    geom_pop = [gdf_pop.loc[i].geometry.__geo_interface__]
+                    pp, pp_tr = rio_mask(psrc, geom_pop, crop=True, nodata=0)
                     pp = pp[0].astype("float64")
                     fl_on_pop = np.full(pp.shape, 255, dtype="uint8")
                     reproject(source=fl, destination=fl_on_pop,
